@@ -2,6 +2,7 @@ import discord
 import random
 from cogs import Currency
 from discord.ext import commands
+from discord import app_commands
 
 # Define card values (Aces can be 1 or 11)
 CARD_VALUES = {
@@ -31,6 +32,7 @@ def calculate_hand_value(hand):
 # Interactive Blackjack UI
 class BlackjackView(discord.ui.View):
     def __init__(self, player, bot, bet=0):
+        print("Init")
         super().__init__()
         self.bot = bot
         self.player = player
@@ -120,14 +122,30 @@ class Blackjack(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name="blackjack", help="Starts a Blackjack game!")
+    @commands.command(name="blackjack", description="Starts a Blackjack game!")
     async def blackjack(self, ctx, bet: int = 0):
-        """ Starts a new Blackjack game """
+        # Create Blackjack game view and setup the game
         view = BlackjackView(ctx.author, self.bot, bet)
+        # Build the embed to show game details
         embed = discord.Embed(title="🎰 Blackjack Game 🎰", color=discord.Color.gold())
         embed.add_field(name="Your Hand", value=", ".join(view.player_hand), inline=False)
         embed.add_field(name="Dealer's Hand", value=f"{view.dealer_hand[0]}, ❓", inline=False)
+        # Send the embed and view to the user
         await ctx.send(embed=embed, view=view)
+
+    #@app_commands.command(name="blackjack", description="Starts a Blackjack game!")
+    #async def blackjack(interaction: discord.Interaction, bet: int = 0):
+    #    """ Starts a new Blackjack game """
+    #    print("Someone wants to play a game")
+    #    view = BlackjackView(interaction.user, bot, bet)
+    #    print("View Created")
+    #    embed = discord.Embed(title="🎰 Blackjack Game 🎰", color=discord.Color.gold())
+    #    print("Embed1")
+    #    embed.add_field(name="Your Hand", value=", ".join(view.player_hand), inline=False)
+    #    print("Embed Player")
+    #    embed.add_field(name="Dealer's Hand", value=f"{view.dealer_hand[0]}, ❓", inline=False)
+    #    print("Going to Send Message")
+    #    await interaction.response.send_message(embed=embed, view=view)
 
 # Setup function for loading the cog
 async def setup(bot):
