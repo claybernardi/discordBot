@@ -49,6 +49,9 @@ class Currency(commands.Cog, name="Currency"):
         self.client = client
         self.rate = 1
         self.data = load_user_data(location=USER_DATA)
+        for user in self.data:
+                update_user_data(database=self.data, user_id=user, field="last_join", data=time.time())
+
 
     @commands.command(name='money', help=" - shows you how much money you currently have")
     async def money(self, ctx):
@@ -61,7 +64,7 @@ class Currency(commands.Cog, name="Currency"):
             print("In VC")
             update_money(data=self.data, rate=self.rate, current_time=time.time(), user_id=user_id)
             await ctx.send(embed=discord.Embed(title="Current Balance",
-                                               description=f"{ctx.author}, you currently have ${self.data[user_id]['money']}",
+                                               description=f"{ctx.author.mention}, you currently have ${self.data[user_id]['money']}",
                                                color=discord.Color.teal()))
         else:
             print("Not in VC")
