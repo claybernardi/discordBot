@@ -4,9 +4,6 @@ from discord.ext import commands
 from discord import FFmpegPCMAudio
 import asyncio
 import logging
-open('example.log', 'w').close()
-logging.basicConfig(filename='example.log', encoding='utf-8', level=logging.INFO)
-
 
 async def setup(client):
     await client.add_cog(Music(client))
