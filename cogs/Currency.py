@@ -7,22 +7,18 @@ import time
 
 USER_DATA = "users.json"
 
+
 def load_user_data(location):
     try:
         with open(location, "r") as f:
             return json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
-            return {}
+        return {}
     print("loaded")
-#load user data from local file or load blank data if unreadable
 
-def save_user_data(data, location):
-    with open(location, "w") as f:
-        json.dump(data, f, indent=5)
-    print("saved")
 
 def create_new_user(database, user_id):
-    database[user_id] = {"money":100, "last_join":None}
+    database[user_id] = {"money": 100, "last_join": None}
     print("Created a new user")
 
 def update_user_data(database, user_id, field, data):
@@ -31,7 +27,7 @@ def update_user_data(database, user_id, field, data):
     database[user_id][field] = data
     print(f"Updated Data")
 
-def update_money(data,rate,user_id,current_time):
+def update_money(data, rate, user_id, current_time):
     money_earned = ((current_time - data[user_id]["last_join"]) / 60) * rate
     print(f"Money Earned {money_earned}")
     total_money = round(data[user_id]["money"] + money_earned, 2)
@@ -40,27 +36,47 @@ def update_money(data,rate,user_id,current_time):
     update_user_data(database=data, user_id=user_id, field="last_join", data=current_time)
     print("Updated User Data")
 
-async def setup(client):
-    await client.add_cog(Currency(client))
+
+def save_user_data(data, location):
+    with open(location, "w") as f:
+        json.dump(data, f, indent=5)
+    print("saved")
+
+async def setup(bot):
+    await bot.add_cog(Currency(bot))
 #Ensure that this is loaded into the discord bot
 
 class Currency(commands.Cog, name="Currency"):
-    def __init__(self, client):
-        self.client = client
+    def __init__(self, bot):
+        self.bot = bot
         self.rate = 1
         self.data = load_user_data(location=USER_DATA)
         for user in self.data:
                 update_user_data(database=self.data, user_id=user, field="last_join", data=time.time())
+
+    async def increment_user_money(self, ctx, amnt):
+        print("Try to increment")
+        user_id = str(ctx.author.id)
+        if user_id not in self.data:
+            create_new_user(database=self.data, user_id=user_id)        #Check if the user exists or make a new user
+        if ctx.author.voice and ctx.author.voice.channel and ctx.author.voice.channel.name != "waiting-room":
+            print("In VC need to update money")
+            update_money(data=self.data, rate=self.rate, current_time=time.time(), user_id=user_id)
+        update_user_data(database=self.data, user_id=user_id, field="money", data=(self.data[user_id]['money']+amnt))
+        return self.data[user_id]['money']
+
+    async def check_money(self,ctx):
+        user_id = str(ctx.author.id)
+        return self.data[user_id]['money']
 
 
     @commands.command(name='money', help=" - shows you how much money you currently have")
     async def money(self, ctx):
         print("money")
         user_id = str(ctx.author.id)
-        voice_state = ctx.author.voice
         if user_id not in self.data:
             create_new_user(database=self.data, user_id=user_id)        #Check if the user exists or make a new user
-        if voice_state and voice_state.channel and voice_state.channel.name != "waiting-room":
+        if ctx.author.voice and ctx.author.voice.channel and ctx.author.voice.channel.name != "waiting-room":
             print("In VC")
             update_money(data=self.data, rate=self.rate, current_time=time.time(), user_id=user_id)
             await ctx.send(embed=discord.Embed(title="Current Balance",
