@@ -32,7 +32,7 @@ class Music(commands.Cog, name="Music"):
                 if voice.is_playing() and not voice.is_paused():
                     time = 0
                 if time >= self.leaveTimer:
-                    voice.play(discord.FFmpegPCMAudio('C:/Users/Clayton/PycharmProjects/discordBot/goobnight.mp3', executable="C:/ffmpeg/bin/ffmpeg.exe")) #Add with mp3 file name
+                    voice.play(discord.FFmpegPCMAudio('goobnight.mp3', executable="C:/ffmpeg/bin/ffmpeg.exe")) #Add with mp3 file name
                     await asyncio.sleep(2)
                     await voice.disconnect()
                 if not voice.is_connected():
@@ -65,7 +65,7 @@ class Music(commands.Cog, name="Music"):
             ctx.voice_client.stop()
             voice = ctx.voice_client
             self.Queue = []
-            voice.play(discord.FFmpegPCMAudio('C:/Users/Clayton/PycharmProjects/discordBot/goobnight.mp3',
+            voice.play(discord.FFmpegPCMAudio('goobnight.mp3',
                                               executable="C:/ffmpeg/bin/ffmpeg.exe"))  # Add with mp3 file name
             await asyncio.sleep(2)
             await ctx.guild.voice_client.disconnect()  # Leave the channel
