@@ -22,7 +22,7 @@ class MagicBooster(discord.ui.View):
             price = 0
             print(f"price issue {e}")
         try:
-            embed = discord.Embed(title='Here is your pack', description=f"{self.booster[self.count]['name']}: ${price} - Card [{self.count+1}/14]",color=discord.Color.teal())
+            embed = discord.Embed(title=f'{ctx.author.mention} Here is your pack', description=f"{self.booster[self.count]['name']}: ${price} - Card [{self.count+1}/14]",color=discord.Color.teal())
             embed.set_image(url=self.booster[self.count]['image_uris']['normal'])
         except Exception as e:
             print(f"Image issue {e}")
@@ -64,8 +64,13 @@ class Magic(commands.Cog, name="Magic"):
     @commands.command(name='booster', help=" - Open a booster pack")
     async def booster(self,ctx, set_code):
         pack = make_clayton_booster(set_code, 'play')
+        try:
+            price = float(self.booster[self.count]['prices']['usd'])
+        except Exception as e:
+            price = 0
+            print(f"price issue {e}")
         view = MagicBooster(ctx, self.bot, pack)
-        embed = discord.Embed(title='Here is your pack',description=f"{pack[0]['name']} - [1/14]", color=discord.Color.teal())
+        embed = discord.Embed(title=f'{ctx.author.mention} Here is your pack',description=f"{pack[0]['name']}: ${price} - Card [2/14]", color=discord.Color.teal())
         embed.set_image(url=pack[0]['image_uris']['normal'])
         await ctx.send(embed=embed, view=view)
 
