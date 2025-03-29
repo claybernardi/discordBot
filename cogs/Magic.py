@@ -22,7 +22,7 @@ class MagicBooster(discord.ui.View):
             price = 0
             print(f"price issue {e}")
         try:
-            embed = discord.Embed(title=f'{ctx.author.mention} Here is your pack', description=f"{self.booster[self.count]['name']}: ${price} - Card [{self.count+1}/14]",color=discord.Color.teal())
+            embed = discord.Embed(title=f'{self.user} Here is your pack', description=f"{self.booster[self.count]['name']}: ${price} - Card [{self.count+1}/14]",color=discord.Color.teal())
             embed.set_image(url=self.booster[self.count]['image_uris']['normal'])
         except Exception as e:
             print(f"Image issue {e}")
