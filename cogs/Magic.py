@@ -65,7 +65,7 @@ class Magic(commands.Cog, name="Magic"):
     async def booster(self,ctx, set_code):
         pack = make_clayton_booster(set_code, 'play')
         try:
-            price = float(self.booster[self.count]['prices']['usd'])
+            price = float(pack[0]['prices']['usd'])
         except Exception as e:
             price = 0
             print(f"price issue {e}")
