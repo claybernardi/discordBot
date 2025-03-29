@@ -63,6 +63,7 @@ class Currency(commands.Cog, name="Currency"):
             print("In VC need to update money")
             update_money(data=self.data, rate=self.rate, current_time=time.time(), user_id=user_id)
         update_user_data(database=self.data, user_id=user_id, field="money", data=(self.data[user_id]['money']+amnt))
+        save_user_data(self.data, USER_DATA)
         return self.data[user_id]['money']
 
     async def check_money(self,ctx):
