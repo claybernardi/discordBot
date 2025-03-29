@@ -110,6 +110,12 @@ def get_foil_wildcards_in_set(set_code: str, rarity: str) -> list:
             if i['rarity'] == rarity:
                 if i['foil'] == True:
                     cards.append(i)
+    if cards == []:
+        for i in jdata:
+            if i['set'] == set_code:
+                if i['rarity'] == rarity:
+                    if i['nonfoil']:
+                        cards.append(i)
     return cards
 
 def get_List_Card(set_code: str):
@@ -323,6 +329,6 @@ if __name__ == '__main__':
     #print(get_cards_in_set('war'))
     #print(get_cards_in_set(sets['Guilds of Ravnica']))
     #print(make_Card_Sheet_Common('Aetherdrift'))
-    print(make_play_booster('blb'))
+    print(make_play_booster('lea'))
 
     #hi
