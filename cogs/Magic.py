@@ -70,7 +70,7 @@ class Magic(commands.Cog, name="Magic"):
             price = 0
             print(f"price issue {e}")
         view = MagicBooster(ctx, self.bot, pack)
-        embed = discord.Embed(title=f'{ctx.author.mention} Here is your pack',description=f"{pack[0]['name']}: ${price} - Card [2/14]", color=discord.Color.teal())
+        embed = discord.Embed(title=f'{ctx.author} Here is your pack',description=f"{pack[0]['name']}: ${price} - Card [1/14]", color=discord.Color.teal())
         embed.set_image(url=pack[0]['image_uris']['normal'])
         await ctx.send(embed=embed, view=view)
 
