@@ -81,6 +81,16 @@ def get_rarity_cards_in_set(set_code: str, rarity: str) -> list:
                             if i.get('promo_types') == None :
                                 if i['name'] not in ('Forest', 'Plains', 'Island', 'Mountain', 'Swamp'):
                                     cards.append(i)
+    if cards == [] and rarity == 'mythic':
+        for i in jdata:
+            if i['set'] == set_code:
+                if i['rarity'] == 'rare':
+                    if i['border_color'] not in ('borderless', 'yellow'):
+                        if i['nonfoil']:
+                            if i['promo'] is False:
+                                if i.get('promo_types') == None:
+                                    if i['name'] not in ('Forest', 'Plains', 'Island', 'Mountain', 'Swamp'):
+                                        cards.append(i)
     return cards
 
 #Get all lands in a set and return a list of them
