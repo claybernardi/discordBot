@@ -91,8 +91,13 @@ class Magic(commands.Cog, name="Magic"):
         set_list = ''
         for key, value in sets.items():
             set_list += f"{key}: {value}\n"
-        embed = discord.Embed(title='MTG Sets', description=set_list, color=discord.Color.green())
-        await ctx.send(embed=embed)
+
+        #paginator stuff cause string too long cause too many MTG sets
+        p = commands.Paginator()
+        for line in set_list.splitlines():
+            p.add_line(line)
+        for page in p.pages:
+            await ctx.send(page)
 
 
 async def setup(bot):
