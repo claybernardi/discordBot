@@ -4,7 +4,7 @@ from discord.ext import commands
 import asyncio
 import logging
 import time
-from make_booster import make_clayton_booster
+from make_booster import make_clayton_booster, get_sets
 
 
 class MagicBooster(discord.ui.View):
@@ -84,8 +84,15 @@ class Magic(commands.Cog, name="Magic"):
         embed = discord.Embed(title='Here is your pack', description= cards, color=discord.Color.teal())
         await ctx.send(embed=embed)
 
-
-
+    #Command to list all MTG sets and their setcodes, uses get_sets() from make_booster.py
+    @commands.command(name='sets', help=" - List all MTG sets and their setcodes")
+    async def sets(self, ctx):
+        sets = get_sets()
+        set_list = ''
+        for key, value in sets.items():
+            set_list += f"{key}: {value}\n"
+        embed = discord.Embed(title='MTG Sets', description=set_list, color=discord.Color.green())
+        await ctx.send(embed=embed)
 
 
 async def setup(bot):
