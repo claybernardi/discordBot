@@ -1,8 +1,14 @@
+from typing import Any
+
 import discord
 import random
+
+from discord._types import ClientT
+
 from cogs import Currency
 from discord.ext import commands
-from discord import app_commands
+
+from discord import app_commands, Interaction
 
 # Define card values (Aces can be 1 or 11)
 CARD_VALUES = {
@@ -29,6 +35,24 @@ def calculate_hand_value(hand):
         value += 11 if value + 11 <= 21 else 1
     return value
 
+class DoubleDownButton(discord.ui.Button):
+    def __init__(self):
+        super().__init__(label="Double Down", style=discord.ButtonStyle.blurple)
+        print("Making the button")
+
+    async def callback(self, interaction: discord.Interaction):
+        print("Double Button hit")
+        if interaction.user != self.view.player:
+            return await interaction.response.send_message("This isn't your game!", ephemeral=True)
+        if self.view.remaining < self.view.bet:
+            return await interaction.response.send_message("You are too poor to use this button 😭", ephemeral=True)
+        currency_cog = self.view.bot.get_cog("Currency")
+        await currency_cog.increment_user_money(self.view.ctx, -self.view.bet)
+        self.view.bet = 2*self.view.bet
+        self.view.player_hand.append(self.view.deck.pop())
+        self.view.game_over = True
+        await self.view.dealer_turn(interaction)
+
 # Interactive Blackjack UI
 class BlackjackView(discord.ui.View):
     def __init__(self, ctx, bot, remaining, bet=0):
@@ -46,10 +70,13 @@ class BlackjackView(discord.ui.View):
         self.player_hand = [self.deck.pop(), self.deck.pop()]
         self.dealer_hand = [self.deck.pop(), self.deck.pop()]
         self.game_over = False
+        self.double_down_button = DoubleDownButton()
+        self.add_item(self.double_down_button)
 
     async def update_message(self, interaction):
         """ Updates the game message """
         print("Updating Message")
+        self.remove_item(self.double_down_button)
         await interaction.response.defer()  # Prevents interaction failure
 
         embed = discord.Embed(title="🎰 Blackjack Game 🎰", color=discord.Color.gold())
@@ -113,11 +140,8 @@ class BlackjackView(discord.ui.View):
             return await interaction.response.send_message("This isn't your game!", ephemeral=True)
 
         self.player_hand.append(self.deck.pop())
-        print(self.player_hand)
         if calculate_hand_value(self.player_hand) > 21:
-            print("You busted")
             self.game_over = True  # Player busted
-        print("Go to Update MEssage")
         await self.update_message(interaction)
 
     @discord.ui.button(label="Stand", style=discord.ButtonStyle.red)
@@ -155,10 +179,29 @@ class Blackjack(commands.Cog, name='Blackjack'):
             print("Creating Game")
             view = BlackjackView(ctx, self.bot, remaining, bet)
             # Build the embed to show game details
+            player_hand_value = calculate_hand_value(view.player_hand)
             embed = discord.Embed(title="🎰 Blackjack Game 🎰", color=discord.Color.gold())
             embed.add_field(name="Your Hand", value=", ".join(view.player_hand), inline=False)
-            embed.add_field(name="Dealer's Hand", value=f"{view.dealer_hand[0]}, ❓", inline=False)
-            embed.add_field(name="Bet Info", value=f"Bet Size: ${bet}   Money Remaining ${round(remaining,2)}", inline=False)
+            embed.add_field(name="Your Total", value=str(calculate_hand_value(view.player_hand)), inline=True)
+            if player_hand_value == 21:
+                dealer_hand_value = calculate_hand_value(view.dealer_hand)
+                embed.add_field(name="Dealer's Hand", value=f"{view.dealer_hand}", inline=False)
+                embed.add_field(name="Dealer Total", value=str(calculate_hand_value(view.dealer_hand)), inline=True)
+                if dealer_hand_value == 21:
+                    winnings = bet
+                    embed.add_field(name="Result", value="🤝 It's a tie!", inline=False)
+                else:
+                    winnings = 2*bet
+                    embed.add_field(name="Result", value="🎉 You win!", inline=False)
+                embed.add_field(name="Bet Info",
+                                value=f"Winnings: ${winnings}   New Total ${round(self.remaining + winnings, 2)}",
+                                inline=False)
+                await currency_cog.increment_user_money(ctx, winnings)
+                view.game_over = True
+                view.disable_all_buttons()
+            else:
+                embed.add_field(name="Dealer's Hand", value=f"{view.dealer_hand[0]}, ❓", inline=False)
+                embed.add_field(name="Bet Info", value=f"Bet Size: ${bet}   Money Remaining ${round(remaining,2)}", inline=False)
             # Send the embed and view to the user
             await ctx.send(embed=embed, view=view)
 
