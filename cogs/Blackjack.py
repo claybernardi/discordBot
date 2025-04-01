@@ -47,6 +47,7 @@ class DoubleDownButton(discord.ui.Button):
             return await interaction.response.send_message("You are too poor to use this button 😭", ephemeral=True)
         currency_cog = self.view.bot.get_cog("Currency")
         await currency_cog.increment_user_money(self.view.ctx, -self.view.bet)
+        self.view.remaining -= self.view.bet
         self.view.bet = 2*self.view.bet
         self.view.player_hand.append(self.view.deck.pop())
         self.view.game_over = True
