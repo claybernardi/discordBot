@@ -96,13 +96,17 @@ class MagicBooster(discord.ui.View):
     async def sell(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.defer()  # defer the interaction
         current_card = self.booster[self.count]
+        mult = .9 #This is the multiplier for the price when selling a card
         try:
             price = float(current_card['prices']['usd'])
         except Exception as e:
             price = 0
             print(f"price issue {e}")
-
         currency_cog = self.bot.get_cog("Currency")
+
+        #Sets the price to be the price of the card times the multiplier
+        price = price * mult
+
         await currency_cog.increment_user_money(self.ctx, price)  # use self.ctx instead of interaction
         await interaction.followup.send(f"You sold {current_card['name']} for ${price}!",
                                         ephemeral=True)  # use interaction.followup instead of interaction.response
