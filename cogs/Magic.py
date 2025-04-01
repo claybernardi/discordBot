@@ -5,7 +5,8 @@ import asyncio
 import logging
 import time
 from make_booster import make_clayton_booster, get_sets
-from cogs.Currency import Currency  # Import the Currency cog
+#VVV Currently unused, should convert to using import later, instead it now just pulls the functions it needs at runtime
+#from cogs.Currency import Currency  # Import the Currency cog
 
 CARD_DATA = "user_cards.json"  # File to store user card data
 PRICE_MULT = .9 #Multiplier for selling cards
@@ -296,6 +297,7 @@ class Magic(commands.Cog, name="Magic"):
         embed.set_image(url=card['image_uris']['normal'])
         embed.set_footer(text=f'Card 1 of {len(user_cards)}')
         await ctx.send(embed=embed, view=view)
+
 
 
 async def setup(bot):
