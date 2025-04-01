@@ -75,8 +75,8 @@ class MagicBooster(discord.ui.View):
             price = 0
             print(f"price issue {e}")
         try:
-            embed = discord.Embed(title=f'{self.user} Here is your pack',
-                                  description=f"{current_card['name']}: ${price}",
+            embed = discord.Embed(title=f'{self.user} Here is your \"{current_card["set_name"]}\" pack',
+                                  description=f"{current_card['name']}: ${price} 💵",
                                   color=discord.Color.teal())
             embed.set_image(url=current_card['image_uris']['normal'])
             embed.set_footer(text=f'Card {self.count + 1} of {len(self.booster)}')
@@ -224,8 +224,8 @@ class Magic(commands.Cog, name="Magic"):
             price = 0
             print(f"price issue {e}")
         view = MagicBooster(ctx, self.bot, pack, self.card_data)
-        embed = discord.Embed(title=f'{ctx.author} Here is your pack',
-                              description=f"{pack[0]['name']}: ${price}",
+        embed = discord.Embed(title=f'{ctx.author} Here is your \"{pack[0]["set_name"]}\" pack',
+                              description=f"{pack[0]['name']}: ${price} 💵",
                               color=discord.Color.teal())
         embed.set_image(url=pack[0]['image_uris']['normal'])
         embed.set_footer(text=f'Card 1 of {len(pack)}')
