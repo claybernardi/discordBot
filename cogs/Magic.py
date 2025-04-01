@@ -96,7 +96,6 @@ class MagicBooster(discord.ui.View):
     async def sell(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.defer()  # defer the interaction
         current_card = self.booster[self.count]
-        mult = .9 #This is the multiplier for the price when selling a card
         try:
             price = float(current_card['prices']['usd'])
         except Exception as e:
@@ -264,7 +263,7 @@ class Magic(commands.Cog, name="Magic"):
         view = CollectionView(ctx, self.bot, user_cards)
         card = user_cards[0]
         embed = discord.Embed(title=f"{ctx.author}'s Collection",
-                              description=f"{card['name']} ({card['set'].upper()}) - Card [1/{len(user_cards)}]",
+                              description=f"{card['name']} ({card['set'].upper()}): ${card['prices']['usd']} - Card [1/{len(user_cards)}]",
                               color=discord.Color.teal())
         embed.set_image(url=card['image_uris']['normal'])
         await ctx.send(embed=embed, view=view)
@@ -272,3 +271,6 @@ class Magic(commands.Cog, name="Magic"):
 
 async def setup(bot):
     await bot.add_cog(Magic(bot))
+
+
+#NOTE FOR EZ REMOVE V1 WORKING
