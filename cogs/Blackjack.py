@@ -2,8 +2,9 @@ from typing import Any
 
 import discord
 import random
-
+import asyncio
 from discord._types import ClientT
+from numpy.f2py.symbolic import as_ne
 
 from cogs import Currency
 from discord.ext import commands
@@ -127,8 +128,23 @@ class BlackjackView(discord.ui.View):
 
     async def dealer_turn(self, interaction):
         """ Dealer plays their turn """
+        embed = discord.Embed(title="🎰 Blackjack Game 🎰", color=discord.Color.gold())
+        embed.add_field(name="Your Hand", value=", ".join(self.player_hand), inline=False)
+        embed.add_field(name="Your Total", value=str(calculate_hand_value(self.player_hand)), inline=True)
+        embed.add_field(name="Dealer's Hand", value=", ".join(self.dealer_hand), inline=False)
+        embed.add_field(name="Dealer Total", value=str(calculate_hand_value(self.dealer_hand)), inline=True)
+        await asyncio.sleep(0.5)
+        await interaction.message.edit(embed=embed, view=self)
+
         while calculate_hand_value(self.dealer_hand) < 17:
             self.dealer_hand.append(self.deck.pop())
+            embed = discord.Embed(title="🎰 Blackjack Game 🎰", color=discord.Color.gold())
+            embed.add_field(name="Your Hand", value=", ".join(self.player_hand), inline=False)
+            embed.add_field(name="Your Total", value=str(calculate_hand_value(self.player_hand)), inline=True)
+            embed.add_field(name="Dealer's Hand", value=", ".join(self.dealer_hand), inline=False)
+            embed.add_field(name="Dealer Total", value=str(calculate_hand_value(self.dealer_hand)), inline=True)
+            await asyncio.sleep(0.5)
+            await interaction.message.edit(embed=embed, view=self)
 
         self.game_over = True
         await self.update_message(interaction)
