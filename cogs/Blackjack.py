@@ -39,10 +39,8 @@ def calculate_hand_value(hand):
 class DoubleDownButton(discord.ui.Button):
     def __init__(self):
         super().__init__(label="Double Down", style=discord.ButtonStyle.blurple)
-        print("Making the button")
 
     async def callback(self, interaction: discord.Interaction):
-        print("Double Button hit")
         if interaction.user != self.view.player:
             return await interaction.response.send_message("This isn't your game!", ephemeral=True)
         if self.view.remaining < self.view.bet:
@@ -57,7 +55,6 @@ class DoubleDownButton(discord.ui.Button):
 # Interactive Blackjack UI
 class BlackjackView(discord.ui.View):
     def __init__(self, ctx, bot, remaining, bet=0):
-        print("Init")
         super().__init__()
         self.bot = bot
         self.ctx = ctx
@@ -72,11 +69,13 @@ class BlackjackView(discord.ui.View):
         self.dealer_hand = [self.deck.pop(), self.deck.pop()]
         self.game_over = False
         self.double_down_button = DoubleDownButton()
-        self.add_item(self.double_down_button)
+        try:
+            self.add_item(self.double_down_button)
+        except Exception as e:
+            print(e)
 
     async def update_message(self, interaction):
         """ Updates the game message """
-        print("Updating Message")
         self.remove_item(self.double_down_button)
         await interaction.response.defer()  # Prevents interaction failure
 
@@ -107,7 +106,6 @@ class BlackjackView(discord.ui.View):
             self.disable_all_buttons()
         else:
             embed.add_field(name="Dealer's Hand", value=f"{self.dealer_hand[0]}, ❓", inline=False)
-        print("Editing message")
         await interaction.message.edit(embed=embed, view=self)  # Properly edits message
 
     def determine_winner(self):
@@ -151,7 +149,6 @@ class BlackjackView(discord.ui.View):
 
     @discord.ui.button(label="Hit", style=discord.ButtonStyle.green)
     async def hit(self, interaction: discord.Interaction, button: discord.ui.Button):
-        print("Hit")
         if interaction.user != self.player:
             return await interaction.response.send_message("This isn't your game!", ephemeral=True)
 
@@ -162,7 +159,6 @@ class BlackjackView(discord.ui.View):
 
     @discord.ui.button(label="Stand", style=discord.ButtonStyle.red)
     async def stand(self, interaction: discord.Interaction, button: discord.ui.Button):
-        print("Stand Hit")
         if interaction.user != self.player:
             return await interaction.response.send_message("This isn't your game!", ephemeral=True)
 
@@ -192,7 +188,6 @@ class Blackjack(commands.Cog, name='Blackjack'):
                                                color=discord.Color.teal()))
         else:
             remaining = await currency_cog.increment_user_money(ctx, -bet)
-            print("Creating Game")
             view = BlackjackView(ctx, self.bot, remaining, bet)
             # Build the embed to show game details
             player_hand_value = calculate_hand_value(view.player_hand)
