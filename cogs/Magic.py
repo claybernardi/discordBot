@@ -8,7 +8,7 @@ from make_booster import make_clayton_booster, get_sets
 from cogs.Currency import Currency  # Import the Currency cog
 
 CARD_DATA = "user_cards.json"  # File to store user card data
-
+mult = .9 #Multiplier for selling cards
 
 def load_card_data(location):
     """Loads user card data from a JSON file."""
@@ -129,6 +129,7 @@ class MagicBooster(discord.ui.View):
 class CollectionView(discord.ui.View):
     def __init__(self, ctx, bot, user_cards):
         super().__init__()
+        self.card_data = load_card_data(CARD_DATA)
         self.user_cards = user_cards
         self.count = 0
         self.user = ctx.author
@@ -158,6 +159,30 @@ class CollectionView(discord.ui.View):
             return await interaction.response.send_message("This isn't your collection!", ephemeral=True)
         self.count -= 1
         if self.count < 0:
+            self.count = len(self.user_cards) - 1
+        await self.update_message(interaction)
+
+    @discord.ui.button(label="💰", style=discord.ButtonStyle.red)
+    async def sell(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.defer()  # defer the interaction
+        current_card = self.user_cards[self.count]
+        try:
+            price = float(current_card['prices']['usd'])
+        except Exception as e:
+            price = 0
+            print(f"price issue {e}")
+        currency_cog = self.bot.get_cog("Currency")
+
+        # Sets the price to be the price of the card times the multiplier
+        price = price * mult
+
+        await currency_cog.increment_user_money(self.ctx, price)  # use self.ctx instead of interaction
+        await interaction.followup.send(f"You sold {current_card['name']} for ${price}!",
+                                        ephemeral=True)  # use interaction.followup instead of interaction.response
+        remove_card_from_user(self.card_data, self.user.id, current_card)  # remove from collection
+        save_card_data(self.card_data, CARD_DATA)
+        self.user_cards.remove(current_card)
+        if self.count >= len(self.user_cards):
             self.count = len(self.user_cards) - 1
         await self.update_message(interaction)
 
