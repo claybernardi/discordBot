@@ -8,7 +8,7 @@ from make_booster import make_clayton_booster, get_sets
 from cogs.Currency import Currency  # Import the Currency cog
 
 CARD_DATA = "user_cards.json"  # File to store user card data
-mult = .9 #Multiplier for selling cards
+PRICE_MULT = .9 #Multiplier for selling cards
 
 def load_card_data(location):
     """Loads user card data from a JSON file."""
@@ -76,9 +76,10 @@ class MagicBooster(discord.ui.View):
             print(f"price issue {e}")
         try:
             embed = discord.Embed(title=f'{self.user} Here is your pack',
-                                  description=f"{current_card['name']}: ${price} - Card [{self.count + 1}/{len(self.booster)}]",
+                                  description=f"{current_card['name']}: ${price}",
                                   color=discord.Color.teal())
             embed.set_image(url=current_card['image_uris']['normal'])
+            embed.set_footer(text=f'Card {self.count + 1} of {len(self.booster)}')
         except Exception as e:
             print(f"Image issue {e}")
         await interaction.message.edit(embed=embed, view=self)
@@ -104,7 +105,7 @@ class MagicBooster(discord.ui.View):
         currency_cog = self.bot.get_cog("Currency")
 
         #Sets the price to be the price of the card times the multiplier
-        price = price * mult
+        price = round((price * PRICE_MULT), 2)
 
         await currency_cog.increment_user_money(self.ctx, price)  # use self.ctx instead of interaction
         await interaction.followup.send(f"You sold {current_card['name']} for ${price}!",
@@ -146,9 +147,10 @@ class CollectionView(discord.ui.View):
         try:
             card = self.user_cards[self.count]
             embed = discord.Embed(title=f"{self.user}'s Collection",
-                                  description=f"{card['name']} ({card['set'].upper()}) - Card [{self.count + 1}/{len(self.user_cards)}]",
+                                  description=f"{card['name']} ({card['set'].upper()}): ${card['prices']['usd']}",
                                   color=discord.Color.teal())
             embed.set_image(url=card['image_uris']['normal'])
+            embed.set_footer(text=f'Card {self.count + 1} of {len(self.user_cards)}')
         except Exception as e:
             print(f"Image issue {e}")
         await interaction.message.edit(embed=embed, view=self)
@@ -174,7 +176,7 @@ class CollectionView(discord.ui.View):
         currency_cog = self.bot.get_cog("Currency")
 
         # Sets the price to be the price of the card times the multiplier
-        price = price * mult
+        price = round((price * PRICE_MULT), 2)
 
         await currency_cog.increment_user_money(self.ctx, price)  # use self.ctx instead of interaction
         await interaction.followup.send(f"You sold {current_card['name']} for ${price}!",
@@ -223,9 +225,10 @@ class Magic(commands.Cog, name="Magic"):
             print(f"price issue {e}")
         view = MagicBooster(ctx, self.bot, pack, self.card_data)
         embed = discord.Embed(title=f'{ctx.author} Here is your pack',
-                              description=f"{pack[0]['name']}: ${price} - Card [1/14]",
+                              description=f"{pack[0]['name']}: ${price}",
                               color=discord.Color.teal())
         embed.set_image(url=pack[0]['image_uris']['normal'])
+        embed.set_footer(text=f'Card 1 of {len(pack)}')
         await ctx.send(embed=embed, view=view)
 
     @commands.command(name='test_booster', help=" - Open a booster pack")
@@ -288,9 +291,10 @@ class Magic(commands.Cog, name="Magic"):
         view = CollectionView(ctx, self.bot, user_cards)
         card = user_cards[0]
         embed = discord.Embed(title=f"{ctx.author}'s Collection",
-                              description=f"{card['name']} ({card['set'].upper()}): ${card['prices']['usd']} - Card [1/{len(user_cards)}]",
+                              description=f"{card['name']} ({card['set'].upper()}): ${card['prices']['usd']}",
                               color=discord.Color.teal())
         embed.set_image(url=card['image_uris']['normal'])
+        embed.set_footer(text=f'Card 1 of {len(user_cards)}')
         await ctx.send(embed=embed, view=view)
 
 
