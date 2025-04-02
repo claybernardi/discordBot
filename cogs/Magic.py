@@ -5,11 +5,13 @@ import asyncio
 import logging
 import time
 from make_booster import make_clayton_booster, get_sets
-#VVV Currently unused, should convert to using import later, instead it now just pulls the functions it needs at runtime
-#from cogs.Currency import Currency  # Import the Currency cog
+
+# VVV Currently unused, should convert to using import later, instead it now just pulls the functions it needs at runtime
+# from cogs.Currency import Currency  # Import the Currency cog
 
 CARD_DATA = "user_cards.json"  # File to store user card data
-PRICE_MULT = .9 #Multiplier for selling cards
+PRICE_MULT = .9  # Multiplier for selling cards
+
 
 def load_card_data(location):
     """Loads user card data from a JSON file."""
@@ -48,7 +50,7 @@ def remove_card_from_user(card_data, user_id, card_to_remove):
             card_data[user_id].remove(card_to_remove)
             return True  # Card removed successfully
         except ValueError:
-            return False # Card not found
+            return False  # Card not found
     return False  # User not found
 
 
@@ -61,7 +63,7 @@ class MagicBooster(discord.ui.View):
         self.bot = bot
         self.card_data = card_data
         self.ctx = ctx  # add ctx to the view
-        add_cards_to_user(self.card_data, self.user.id, self.booster) # Add all cards to collection on creation
+        add_cards_to_user(self.card_data, self.user.id, self.booster)  # Add all cards to collection on creation
         save_card_data(self.card_data, CARD_DATA)
 
     async def update_message(self, interaction):
@@ -107,18 +109,48 @@ class MagicBooster(discord.ui.View):
             print(f"price issue {e}")
         currency_cog = self.bot.get_cog("Currency")
 
-        #Sets the price to be the price of the card times the multiplier
+        # Sets the price to be the price of the card times the multiplier
         price = round((price * PRICE_MULT), 2)
 
         await currency_cog.increment_user_money(self.ctx, price)  # use self.ctx instead of interaction
         await interaction.followup.send(f"You sold {current_card['name']} for ${price}!",
                                         ephemeral=True)  # use interaction.followup instead of interaction.response
-        remove_card_from_user(self.card_data, self.user.id, current_card) #remove from collection
+        remove_card_from_user(self.card_data, self.user.id, current_card)  # remove from collection
         save_card_data(self.card_data, CARD_DATA)
         self.booster.remove(current_card)
         if self.count >= len(self.booster):
             self.count = len(self.booster) - 1
         await self.update_message(interaction)
+
+    @discord.ui.button(label="💰All", style=discord.ButtonStyle.danger)
+    async def sell_all(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.defer()
+        if interaction.user != self.user:
+            return await interaction.response.send_message("This isn't your pack!", ephemeral=True)
+
+        currency_cog = self.bot.get_cog("Currency")
+        total_price = 0
+        sold_cards = []
+        for card in self.booster[:]:  # iterate over a copy of the list
+            try:
+                price = float(card['prices']['usd'])
+            except Exception as e:
+                price = 0
+                print(f"price issue {e}")
+            price = round((price * PRICE_MULT), 2)
+            total_price += price
+            sold_cards.append(card['name'])
+            remove_card_from_user(self.card_data, self.user.id, card)
+            self.booster.remove(card)
+
+        total_price = round(total_price, 2)
+
+        save_card_data(self.card_data, CARD_DATA)
+        await currency_cog.increment_user_money(self.ctx, total_price)
+        await interaction.followup.send(
+            f"You sold all cards in the pack for a total of ${total_price}! Cards sold: {', '.join(sold_cards)}",
+            ephemeral=True)
+        await interaction.message.edit(content="You have sold all the cards in this pack!", view=None)
 
     @discord.ui.button(label="▶", style=discord.ButtonStyle.green)
     async def next(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -126,7 +158,7 @@ class MagicBooster(discord.ui.View):
             return await interaction.response.send_message("This isn't your pack!", ephemeral=True)
         self.count += 1
         if self.count > len(self.booster) - 1:
-            self.count = 0 #loop back to the beginning
+            self.count = 0  # loop back to the beginning
         await self.update_message(interaction)
 
 
@@ -190,6 +222,36 @@ class CollectionView(discord.ui.View):
         if self.count >= len(self.user_cards):
             self.count = len(self.user_cards) - 1
         await self.update_message(interaction)
+
+    @discord.ui.button(label="💰All", style=discord.ButtonStyle.danger)
+    async def sell_all(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.defer()
+        if interaction.user != self.user:
+            return await interaction.response.send_message("This isn't your collection!", ephemeral=True)
+
+        currency_cog = self.bot.get_cog("Currency")
+        total_price = 0
+        sold_cards = []
+        for card in self.user_cards[:]:  # iterate over a copy of the list
+            try:
+                price = float(card['prices']['usd'])
+            except Exception as e:
+                price = 0
+                print(f"price issue {e}")
+            price = round((price * PRICE_MULT), 2)
+            total_price += price
+            sold_cards.append(card['name'])
+            remove_card_from_user(self.card_data, self.user.id, card)
+            self.user_cards.remove(card)
+
+        total_price = round(total_price, 2)
+
+        save_card_data(self.card_data, CARD_DATA)
+        await currency_cog.increment_user_money(self.ctx, total_price)
+        await interaction.followup.send(
+            f"You sold all cards in your collection for a total of ${total_price}! Cards sold: {', '.join(sold_cards)}",
+            ephemeral=True)
+        await interaction.message.edit(content="You have sold all the cards in your collection!", view=None)
 
     @discord.ui.button(label="▶", style=discord.ButtonStyle.green)
     async def next(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -301,9 +363,10 @@ class Magic(commands.Cog, name="Magic"):
         await ctx.send(embed=embed, view=view)
 
 
-
 async def setup(bot):
     await bot.add_cog(Magic(bot))
     print('Magic cog has loaded')
 
-#NOTE FOR EZ REMOVE V1 WORKING
+
+
+#v2 with sell all
