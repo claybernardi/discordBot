@@ -97,6 +97,8 @@ class MagicBooster(discord.ui.View):
     @discord.ui.button(label="💰", style=discord.ButtonStyle.red)
     async def sell(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.defer()  # defer the interaction
+        if interaction.user != self.user:
+            return await interaction.response.send_message("This isn't your pack!", ephemeral=True)
         current_card = self.booster[self.count]
         try:
             price = float(current_card['prices']['usd'])
