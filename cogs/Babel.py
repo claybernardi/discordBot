@@ -42,3 +42,4 @@ class Babel(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(Babel(bot))
+    print('Babel cog has loaded')
