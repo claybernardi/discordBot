@@ -4,6 +4,10 @@ from discord.ext import commands
 import asyncio
 import logging
 import time
+
+from discord.webhook.async_ import interaction_message_response_params
+from pyexpat.errors import messages
+
 from make_booster import make_clayton_booster, get_sets
 
 # VVV Currently unused, should convert to using import later, instead it now just pulls the functions it needs at runtime
@@ -344,6 +348,9 @@ class Magic(commands.Cog, name="Magic"):
             p.add_line(line)
         for page in p.pages:
             await ctx.send(page)
+
+
+
 
     @commands.command(name='collection', help=' - Shows your current card collection')
     async def collection(self, ctx):
