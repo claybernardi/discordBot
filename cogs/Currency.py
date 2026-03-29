@@ -18,18 +18,18 @@ def load_user_data(location):
 
 
 def create_new_user(database, ctx):
-    user_id = str(ctx.author.id)
+    user_id = str(ctx.id)
     try:
-        database[user_id] = {'name': ctx.author.name, "money": 100, "last_join": time.time()}
+        database[user_id] = {'name': ctx.name, "money": 100, "last_join": time.time()}
     except Exception as e:
         print(e)
-    print(f"Created a new user for {ctx.author.name}")
+    print(f"Created a new user for {ctx.name}")
 
 
 def update_user_data(database, ctx, field, data, pass_user_id=None):
     try:
-        user_id = str(ctx.author.id)
-        database[user_id]['name'] = ctx.author.name
+        user_id = str(ctx.id)
+        database[user_id]['name'] = ctx.name
     except Exception:
         user_id = pass_user_id
     if user_id not in database:
@@ -38,7 +38,7 @@ def update_user_data(database, ctx, field, data, pass_user_id=None):
 
 
 def update_money(data, rate, ctx, current_time):
-    user_id = str(ctx.author.id)
+    user_id = str(ctx.id)
     try:
         money_earned = ((current_time - data[user_id]["last_join"]) / 60) * rate
     except Exception as e:
@@ -70,7 +70,7 @@ class Currency(commands.Cog, name="Currency"):
             update_user_data(database=self.data, pass_user_id=user, field="last_join", data=time.time(), ctx=None)
 
     async def increment_user_money(self, ctx, amnt):
-        user_id = str(ctx.author.id)
+        user_id = str(ctx.id)
         if user_id not in self.data:
             create_new_user(database=self.data, ctx=ctx)  # Check if the user exists or make a new user
         if ctx.author.voice and ctx.author.voice.channel and ctx.author.voice.channel.name != "waiting-room":
@@ -80,7 +80,7 @@ class Currency(commands.Cog, name="Currency"):
         return self.data[user_id]['money']
 
     async def check_money(self, ctx):
-        user_id = str(ctx.author.id)
+        user_id = str(ctx.id)
         if user_id not in self.data:
             create_new_user(database=self.data, ctx=ctx)
             save_user_data(self.data, USER_DATA)  # Check if the user exists or make a new user
@@ -91,7 +91,7 @@ class Currency(commands.Cog, name="Currency"):
 
     @commands.command(name='money', help=" - shows you how much money you currently have")
     async def money(self, ctx):
-        user_id = str(ctx.author.id)
+        user_id = str(ctx.id)
         if user_id not in self.data:
             create_new_user(database=self.data, ctx=ctx)
             save_user_data(self.data, USER_DATA)  # Check if the user exists or make a new user
@@ -119,22 +119,22 @@ class Currency(commands.Cog, name="Currency"):
         await ctx.send(embed=embed)
 
     @commands.Cog.listener()
-    async def on_voice_state_update(self, ctx, before, after):
-        user_id = str(ctx.author.id)
+    async def on_voice_state_update(self, member, before, after):
+        user_id = str(member.id)
         current_time = time.time()
 
         if before.channel is None and after.channel is not None:
-            update_user_data(database=self.data, ctx=ctx, field="last_join", data=current_time)
+            update_user_data(database=self.data, ctx=member, field="last_join", data=current_time)
 
         elif before.channel and before.channel.name == "waiting-room" and after.channel is not None:
-            print(f"{ctx.author.name} moved from the waitingg room to {after.channel.name}")
-            update_user_data(database=self.data, ctx=ctx, field="last_join", data=current_time)
+            print(f"{member.author.name} moved from the waitingg room to {after.channel.name}")
+            update_user_data(database=self.data, ctx=member, field="last_join", data=current_time)
 
         elif before.channel is not None and after.channel is None:
-            update_money(data=self.data, rate=self.rate, current_time=time.time(), ctx=ctx)
+            update_money(data=self.data, rate=self.rate, current_time=time.time(), ctx=member)
 
         elif before.channel is not None and after.channel and after.channel.name == "waiting-room":
-            update_money(data=self.data, rate=self.rate, current_time=time.time(), ctx=ctx)
+            update_money(data=self.data, rate=self.rate, current_time=time.time(), ctx=member)
 
         print(f"Before Channel {before.channel} After Channel {after.channel}")
         save_user_data(self.data, USER_DATA)
