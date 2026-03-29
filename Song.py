@@ -16,6 +16,10 @@ class Song():
             self.link= url
             with YoutubeDL(YDL_OPTIONS) as ydl:
                 info = ydl.extract_info(url, download=False)
+        elif "soundcloud" in url:
+            self.link=url
+            with YoutubeDL(YDL_OPTIONS) as ydl:
+                info = ydl.extract_info(url, download=False)
         else:
             with YoutubeDL(YDL_OPTIONS) as ydl:
                 info = ydl.extract_info(f"ytsearch:{url}", download=False)['entries'][0]
